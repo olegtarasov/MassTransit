@@ -111,6 +111,7 @@ namespace MassTransit.SqlTransport.PostgreSql
                 fetch_consumer_id = _consumerId,
                 fetch_lock_id = NewId.NextGuid(),
                 lock_duration = lockDuration,
+                global_order = mode == SqlReceiveMode.PartitionedGloballyOrdered,
                 fetch_count = messageLimit
             }), CancellationToken);
         }

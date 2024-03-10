@@ -429,6 +429,7 @@ namespace MassTransit.SqlTransport.PostgreSql
                                                ,   fetch_consumer_id uuid
                                                ,   fetch_lock_id uuid
                                                ,   lock_duration interval
+                                               ,   global_order boolean DEFAULT FALSE
                                                ,   fetch_count integer DEFAULT 1)
                                                    RETURNS TABLE(
                                                    transport_message_id uuid
@@ -480,15 +481,18 @@ namespace MassTransit.SqlTransport.PostgreSql
                                                        WHERE md.message_delivery_id IN (
                                                            WITH ready AS (
                                                                SELECT mdx.message_delivery_id, mdx.enqueue_time, mdx.lock_id, mdx.priority,
-                                                                      row_number() over pw as row_number
+                                                                      row_number() over pw as row_number,
+                                                                      bool_or(mdx.lock_id is not null) over pw as has_lock
                                                                FROM "{0}".message_delivery mdx
                                                                WHERE mdx.queue_id = v_queue_id
                                                                    AND mdx.delivery_count < mdx.max_delivery_count
-                                                               WINDOW pw as (partition by mdx.partition_key order by mdx.priority, mdx.enqueue_time, mdx.message_delivery_id)
+                                                               WINDOW pw as (partition by mdx.partition_key
+                                                                   order by mdx.priority, mdx.enqueue_time, mdx.message_delivery_id
+                                                                   ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
                                                            )
                                                            SELECT ready.message_delivery_id
                                                                FROM ready
-                                                               WHERE row_number = 1 AND ready.lock_id IS NULL
+                                                               WHERE row_number = 1 AND ((global_order AND NOT ready.has_lock) OR (NOT global_order AND ready.lock_id IS NULL))
                                                                AND ready.enqueue_time < v_now
                                                                ORDER BY ready.priority, ready.enqueue_time, ready.message_delivery_id
                                                            LIMIT fetch_count)

@@ -41,6 +41,7 @@ namespace MassTransit.SqlTransport.Configuration
                     SqlReceiveMode.Normal => ReceiveMode,
                     SqlReceiveMode.Partitioned when _concurrentDeliveryLimit > 1 => SqlReceiveMode.PartitionedConcurrent,
                     SqlReceiveMode.PartitionedOrdered when _concurrentDeliveryLimit > 1 => SqlReceiveMode.PartitionedOrderedConcurrent,
+                    SqlReceiveMode.PartitionedGloballyOrdered when _concurrentDeliveryLimit > 1 => SqlReceiveMode.PartitionedOrderedConcurrent,
                     SqlReceiveMode.PartitionedConcurrent when _concurrentDeliveryLimit == 1 => SqlReceiveMode.Partitioned,
                     SqlReceiveMode.PartitionedOrderedConcurrent when _concurrentDeliveryLimit == 1 => SqlReceiveMode.PartitionedOrdered,
                     _ => ReceiveMode

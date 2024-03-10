@@ -167,6 +167,7 @@ namespace MassTransit.SqlTransport.Configuration
                 case SqlReceiveMode.Normal:
                 case SqlReceiveMode.Partitioned:
                 case SqlReceiveMode.PartitionedOrdered:
+                case SqlReceiveMode.PartitionedGloballyOrdered:
                     _settings.ReceiveMode = mode;
                     break;
                 case SqlReceiveMode.PartitionedConcurrent:
